@@ -7,31 +7,22 @@ import sys
 import requests
 import subprocess
 import tempfile
-from datetime import datetime
+from getpass import getpass
 
-class AdminClient:
-    """Клиент с поддержкой админской системы"""
+class MultiUserClient:
+    """Клиент с поддержкой разных пользователей"""
     
-    def __init__(self, server_url, client_name=None):
+    def __init__(self, server_url="http://localhost:8080"):
         self.server_url = server_url.rstrip('/')
-        self.client_name = client_name or socket.gethostname()
         self.local_ip = self.get_local_ip()
-        self.client_token = None
+        self.username = None
+        self.role = None
+        self.session_token = None
         self.running = True
         
-        # Статусы
-        self.is_banned = False
-        self.is_muted = False
-        self.ban_reason = ""
-        self.mute_until = None
-        
-        # Статистика
-        self.messages_received = 0
-        self.last_activity = time.time()
-        
-        print(f"🎮 Клиент: {self.client_name}")
-        print(f"📍 IP: {self.local_ip}")
-        print(f"🌐 Сервер: {self.server_url}")
+        print("="*60)
+        print("     КЛИЕНТ С МНОГОПОЛЬЗОВАТЕЛЬСКОЙ СИСТЕМОЙ")
+        print("="*60)
     
     def get_local_ip(self):
         """Получает локальный IP"""
@@ -44,134 +35,125 @@ class AdminClient:
         except:
             return "127.0.0.1"
     
-    def register_on_server(self):
-        """Регистрируется на сервере"""
+    def authenticate_user(self):
+        """Аутентификация пользователя"""
+        print("\n🔐 АВТОРИЗАЦИЯ")
+        print("="*40)
+        
+        while True:
+            print("\nВарианты входа:")
+            print("1. 👤 Войти как пользователь (логин без пароля)")
+            print("2. 👑 Войти как администратор (логин + пароль)")
+            print("3. 🚪 Выйти")
+            
+            choice = input("\nВыберите вариант [1-3]: ").strip()
+            
+            if choice == "1":
+                # Пользовательский вход (без пароля)
+                username = input("Введите логин: ").strip()
+                if not username:
+                    print("❌ Логин обязателен")
+                    continue
+                
+                # Пробуем войти без пароля
+                if self.try_login(username, ""):
+                    return True
+                else:
+                    print("❌ Не удалось войти. Попробуйте другой логин.")
+            
+            elif choice == "2":
+                # Админский вход
+                username = input("Логин админа: ").strip()
+                password = getpass("Пароль админа: ")
+                
+                if self.try_login(username, password):
+                    return True
+                else:
+                    print("❌ Неверный логин или пароль")
+            
+            elif choice == "3":
+                print("\n👋 До свидания!")
+                return False
+            else:
+                print("❌ Неверный выбор")
+    
+    def try_login(self, username, password):
+        """Пробует войти на сервер"""
         try:
             response = requests.post(
-                f"{self.server_url}/api/register_client",
-                json={'name': self.client_name},
+                f"{self.server_url}/api/login",
+                json={'username': username, 'password': password},
                 timeout=5
             )
             
             if response.status_code == 200:
                 data = response.json()
                 if data.get('success'):
-                    self.client_token = data.get('token')
-                    print("✅ Успешно зарегистрирован на сервере")
-                    print(f"🔑 Токен: {self.client_token}")
+                    self.username = data['username']
+                    self.role = data['role']
+                    self.session_token = data.get('session')
+                    
+                    print(f"\n✅ Успешный вход!")
+                    print(f"👤 Пользователь: {self.username}")
+                    print(f"🎭 Роль: {'Администратор' if self.role == 'admin' else 'Пользователь'}")
+                    print(f"📍 IP: {self.local_ip}")
+                    
                     return True
         except Exception as e:
-            print(f"❌ Ошибка регистрации: {e}")
+            print(f"❌ Ошибка подключения к серверу: {e}")
+            print("⚠️  Продолжаю в автономном режиме")
+            
+            # Автономный режим
+            self.username = username or "Гость"
+            self.role = "admin" if username == "Artuom_SS-Owner" else "user"
+            print(f"👤 Автономный режим: {self.username}")
+            
+            return True
         
-        print("⚠️ Работаю в автономном режиме")
         return False
     
-    def check_punishments(self):
-        """Проверяет наказания на сервере"""
-        try:
-            response = requests.get(
-                f"{self.server_url}/api/clients",
-                timeout=3
-            )
-            
-            if response.status_code == 200:
-                clients = response.json()
-                for client in clients:
-                    if client['ip'] == self.local_ip:
-                        self.is_banned = bool(client.get('is_banned'))
-                        self.is_muted = bool(client.get('is_muted'))
-                        
-                        if self.is_banned:
-                            self.ban_reason = client.get('ban_reason', '')
-                            print(f"🚫 Вы забанены! Причина: {self.ban_reason}")
-                        
-                        if self.is_muted:
-                            mute_time = client.get('mute_until')
-                            if mute_time:
-                                self.mute_until = datetime.fromisoformat(mute_time.replace('Z', '+00:00'))
-                                print(f"🔇 Вы в муте до: {self.mute_until}")
-                        
-                        break
-        except:
-            pass
-    
-    def send_heartbeat(self):
-        """Отправляет heartbeat на сервер"""
-        while self.running:
-            try:
-                # Обновляем время активности
-                self.last_activity = time.time()
-                
-                # Проверяем наказания
-                self.check_punishments()
-                
-                # Если забанен - не отправляем heartbeat
-                if self.is_banned:
-                    print("🚫 Забанен, heartbeat отключен")
-                    time.sleep(60)
-                    continue
-                
-                # Отправляем статус
-                status_data = {
-                    'ip': self.local_ip,
-                    'name': self.client_name,
-                    'token': self.client_token,
-                    'status': 'online',
-                    'messages_received': self.messages_received
-                }
-                
-                requests.post(
-                    f"{self.server_url}/api/status",
-                    json=status_data,
-                    timeout=3
-                )
-                
-            except:
-                pass
-            
-            time.sleep(30)  # Каждые 30 секунд
-    
-    def listen_for_messages(self, port=7777):
-        """Слушает входящие сообщения"""
+    def listen_for_vbs(self, port=7777):
+        """Слушает входящие VBS скрипты"""
         server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         server.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         server.bind(('0.0.0.0', port))
         server.listen(5)
         server.settimeout(1)
         
-        print(f"📡 Слушаю сообщения на порту {port}")
+        print(f"\n📡 Слушаю VBS сообщения на порту {port}")
         
         while self.running:
             try:
                 client_socket, address = server.accept()
                 
-                # Проверяем не забанены ли мы
-                if self.is_banned:
-                    print(f"🚫 Игнорирую сообщение от {address[0]} (забанен)")
-                    client_socket.close()
-                    continue
-                
-                # Получаем данные
                 data = client_socket.recv(4096).decode('utf-8')
                 
                 try:
                     message = json.loads(data)
-                    print(f"\n📩 Сообщение от {address[0]}")
                     
-                    # Обрабатываем разные типы сообщений
                     if message.get('type') == 'execute_vbs':
-                        self.execute_vbs_message(message)
-                    elif message.get('type') == 'show_message':
-                        self.show_text_message(message)
-                    elif message.get('type') == 'system_command':
-                        self.execute_system_command(message)
-                    else:
-                        print(f"Неизвестный тип сообщения: {message}")
-                    
-                    self.messages_received += 1
-                    
+                        vbs_path = message.get('vbs_path')
+                        
+                        if vbs_path and os.path.exists(vbs_path):
+                            print(f"\n📩 Получен VBS скрипт от {address[0]}")
+                            
+                            # Показываем код
+                            with open(vbs_path, 'r', encoding='utf-8') as f:
+                                vbs_code = f.read()
+                                print(f"📝 Код VBS:\n{vbs_code}")
+                            
+                            # Запускаем
+                            if os.name == 'nt':
+                                print("▶️ Запускаю VBS...")
+                                os.startfile(vbs_path)
+                            else:
+                                print("⚠️ VBS работает только на Windows")
+                            
+                            # Удаляем файл
+                            threading.Timer(3, lambda: os.remove(vbs_path) if os.path.exists(vbs_path) else None).start()
+                
                 except json.JSONDecodeError:
-                    print(f"📩 Получены данные: {data[:100]}...")
+                    print(f"📩 Данные от {address[0]}: {data[:100]}...")
                 
                 client_socket.close()
                 
@@ -183,156 +165,121 @@ class AdminClient:
         
         server.close()
     
-    def execute_vbs_message(self, message_data):
-        """Выполняет VBS скрипт"""
-        vbs_path = message_data.get('vbs_path')
-        
-        if not vbs_path or not os.path.exists(vbs_path):
-            print("❌ VBS файл не найден")
-            return
-        
-        print("▶️ Запускаю VBS скрипт...")
-        
+    def send_vbs_to_ip(self, target_ip, vbs_code):
+        """Отправляет VBS на указанный IP"""
         try:
-            # Для Windows
-            if os.name == 'nt':
-                # Читаем и показываем код
-                with open(vbs_path, 'r', encoding='utf-8') as f:
-                    vbs_code = f.read()
-                    print(f"📝 Код VBS:\n{vbs_code}\n")
-                
-                # Запускаем скрипт
-                subprocess.run(['cscript', '//B', vbs_path], shell=True)
-                # или для MessageBox:
-                # os.startfile(vbs_path)
-                
-                print("✅ VBS выполнен")
-            
-            # Для Linux/Mac
-            else:
-                print("⚠️ VBS скрипты работают только на Windows")
-                with open(vbs_path, 'r', encoding='utf-8') as f:
-                    print(f"📝 Содержимое VBS:\n{f.read()}")
-            
-            # Удаляем файл
-            threading.Timer(3, lambda: os.remove(vbs_path) if os.path.exists(vbs_path) else None).start()
-            
-        except Exception as e:
-            print(f"❌ Ошибка выполнения VBS: {e}")
-    
-    def show_text_message(self, message_data):
-        """Показывает текстовое сообщение"""
-        title = message_data.get('title', 'Сообщение')
-        text = message_data.get('text', '')
-        
-        print(f"\n💬 {title}")
-        print("="*50)
-        print(text)
-        print("="*50)
-        
-        # Для Windows можно показать MessageBox
-        if os.name == 'nt':
-            try:
-                import ctypes
-                ctypes.windll.user32.MessageBoxW(0, text, title, 0x40)
-            except:
-                pass
-    
-    def execute_system_command(self, message_data):
-        """Выполняет системную команду (с ограничениями)"""
-        command = message_data.get('command', '')
-        
-        # Проверяем безопасность команды
-        dangerous_commands = ['format', 'del', 'rm', 'shutdown', 'taskkill']
-        if any(danger in command.lower() for danger in dangerous_commands):
-            print(f"🚫 Опасная команда заблокирована: {command}")
-            return
-        
-        print(f"⚙️ Выполняю команду: {command}")
-        
-        try:
-            result = subprocess.run(
-                command,
-                shell=True,
-                capture_output=True,
-                text=True,
-                timeout=10
-            )
-            
-            print(f"📤 Результат:\n{result.stdout}")
-            if result.stderr:
-                print(f"❌ Ошибки:\n{result.stderr}")
-                
-        except subprocess.TimeoutExpired:
-            print("⏱️ Команда превысила лимит времени")
-        except Exception as e:
-            print(f"❌ Ошибка выполнения: {e}")
-    
-    def create_vbs_script(self, title, message, msg_type='info'):
-        """Создаёт VBS скрипт для отправки"""
-        # Определяем иконку
-        if msg_type == 'error':
-            vb_icon = 'vbCritical'
-        elif msg_type == 'warning':
-            vb_icon = 'vbExclamation'
-        elif msg_type == 'question':
-            vb_icon = 'vbQuestion'
-        else:
-            vb_icon = 'vbInformation'
-        
-        # Создаём VBS код
-        vbs_code = f'''MsgBox "{message}", {vb_icon}, "{title}"'''
-        
-        return vbs_code
-    
-    def send_vbs_to_admin(self, admin_ip, vbs_code, target_ip=None):
-        """Отправляет VBS скрипт админу для выполнения"""
-        if self.is_muted:
-            print("🔇 Вы в муте, не можете отправлять сообщения")
-            return False
-        
-        try:
-            # Создаём временный файл
+            # Создаем временный файл
             with tempfile.NamedTemporaryFile(mode='w', suffix='.vbs', delete=False, encoding='utf-8') as f:
                 f.write(vbs_code)
                 vbs_path = f.name
             
-            # Отправляем админу
+            # Отправляем
+            client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            client_socket.settimeout(5)
+            client_socket.connect((target_ip, 7777))
+            
             data = {
                 'type': 'execute_vbs',
                 'vbs_path': vbs_path,
-                'from': self.local_ip,
-                'from_name': self.client_name,
-                'target_ip': target_ip or 'self',
                 'timestamp': time.time()
             }
             
-            admin_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            admin_socket.settimeout(5)
-            admin_socket.connect((admin_ip, 7778))  # Админ слушает другой порт
+            client_socket.send(json.dumps(data).encode('utf-8'))
+            client_socket.close()
             
-            admin_socket.send(json.dumps(data).encode('utf-8'))
-            admin_socket.close()
+            print(f"✅ VBS отправлен на {target_ip}")
             
-            print(f"📤 VBS отправлен админу {admin_ip}")
+            # Удаляем файл
+            threading.Timer(10, lambda: os.remove(vbs_path) if os.path.exists(vbs_path) else None).start()
+            
             return True
             
         except Exception as e:
             print(f"❌ Ошибка отправки: {e}")
             return False
     
-    def start_client_ui(self):
-        """Запускает пользовательский интерфейс"""
-        print("\n" + "="*60)
-        print("🎮 ИНТЕРФЕЙС КЛИЕНТА")
-        print("="*60)
+    def create_vbs_from_template(self):
+        """Создает VBS из шаблона"""
+        templates = {
+            '1': {
+                'name': 'Простое сообщение',
+                'code': 'MsgBox "Привет от {}!", vbInformation, "Сообщение"',
+                'desc': 'Базовое информационное сообщение'
+            },
+            '2': {
+                'name': 'Ошибка системы',
+                'code': 'MsgBox "КРИТИЧЕСКАЯ ОШИБКА СИСТЕМЫ!", vbCritical, "СИСТЕМНАЯ ОШИБКА"',
+                'desc': 'Сообщение об ошибке с красной иконкой'
+            },
+            '3': {
+                'name': 'Предупреждение',
+                'code': 'MsgBox "Внимание! Проверьте настройки", vbExclamation, "ПРЕДУПРЕЖДЕНИЕ"',
+                'desc': 'Предупреждение с жёлтой иконкой'
+            },
+            '4': {
+                'name': 'Вопрос',
+                'code': '''response = MsgBox("Вы уверены?", vbYesNo + vbQuestion, "Вопрос")
+If response = vbYes Then
+    MsgBox "Вы согласились", vbInformation, "Результат"
+Else
+    MsgBox "Вы отказались", vbInformation, "Результат"
+End If''',
+                'desc': 'Диалог с выбором ответа'
+            },
+            '5': {
+                'name': 'Таймер',
+                'code': '''MsgBox "Сообщение 1", vbInformation, "Таймер"
+WScript.Sleep 3000
+MsgBox "Сообщение 2", vbInformation, "Таймер"''',
+                'desc': 'Несколько сообщений с задержкой'
+            }
+        }
         
+        print("\n📋 ВЫБЕРИТЕ ШАБЛОН VBS:")
+        for key, template in templates.items():
+            print(f"{key}. {template['name']} - {template['desc']}")
+        
+        choice = input("\nВыберите шаблон [1-5]: ").strip()
+        
+        if choice in templates:
+            template = templates[choice]
+            
+            # Подставляем имя пользователя
+            vbs_code = template['code'].format(self.username)
+            
+            print(f"\n📝 Выбран шаблон: {template['name']}")
+            print(f"📋 Код VBS:\n{vbs_code}")
+            
+            return vbs_code
+        else:
+            print("❌ Неверный выбор")
+            return None
+    
+    def show_main_menu(self):
+        """Показывает главное меню"""
         while self.running:
-            print("\nМеню:")
-            print("1. 📝 Создать и отправить VBS сообщение")
-            print("2. 📊 Мой статус")
-            print("3. 🌐 Проверить соединение с сервером")
-            print("4. 🚪 Выйти")
+            role_display = "👑 АДМИН" if self.role == "admin" else "👤 ПОЛЬЗОВАТЕЛЬ"
+            
+            print("\n" + "="*60)
+            print(f"     ГЛАВНОЕ МЕНЮ [{role_display}]")
+            print("="*60)
+            print(f"👤 Пользователь: {self.username}")
+            print(f"📍 IP адрес: {self.local_ip}")
+            print(f"🌐 Сервер: {self.server_url}")
+            print("="*60)
+            
+            print("\n📋 Основные действия:")
+            print("1. 📤 Отправить VBS сообщение")
+            print("2. 📝 Создать VBS из шаблона")
+            print("3. 💾 Запустить VBS локально")
+            
+            if self.role == "admin":
+                print("\n⚙️ Административные действия:")
+                print("4. 👥 Управление пользователями")
+                print("5. 📊 Просмотр статистики")
+                print("6. 🛡️ Блокировки и муты")
+            
+            print("\n0. 🚪 Выйти из системы")
             
             try:
                 choice = input("\nВыберите действие: ").strip()
@@ -340,176 +287,266 @@ class AdminClient:
                 if choice == "1":
                     self.send_vbs_menu()
                 elif choice == "2":
-                    self.show_status()
+                    self.create_vbs_menu()
                 elif choice == "3":
-                    self.check_connection()
-                elif choice == "4":
-                    print("\n👋 Выход из программы...")
+                    self.run_local_vbs()
+                elif choice == "4" and self.role == "admin":
+                    self.manage_users()
+                elif choice == "5" and self.role == "admin":
+                    self.show_stats()
+                elif choice == "6" and self.role == "admin":
+                    self.manage_blocks()
+                elif choice == "0":
+                    print("\n👋 Выход из системы...")
                     self.running = False
                 else:
-                    print("❌ Неверный выбор")
+                    print("❌ Неверный выбор или недостаточно прав")
                     
             except KeyboardInterrupt:
-                print("\n👋 Завершение работы...")
+                print("\n\n👋 Завершение работы...")
                 self.running = False
             except Exception as e:
                 print(f"❌ Ошибка: {e}")
     
     def send_vbs_menu(self):
-        """Меню отправки VBS сообщения"""
-        if self.is_muted:
-            print("🔇 Вы в муте, не можете отправлять сообщения")
-            return
-        
-        print("\n📝 СОЗДАНИЕ VBS СООБЩЕНИЯ")
+        """Меню отправки VBS"""
+        print("\n📤 ОТПРАВКА VBS СООБЩЕНИЯ")
         print("="*40)
         
-        # Ввод данных
-        title = input("Заголовок сообщения: ").strip() or "Сообщение от клиента"
-        message = input("Текст сообщения: ").strip() or "Привет от клиента!"
+        # Выбор получателя
+        target_ip = input("IP получателя (оставьте пустым для себя): ").strip()
         
-        print("\nТип сообщения:")
-        print("1. ℹ️ Информация (синее окно)")
-        print("2. ⚠️ Предупреждение (жёлтое окно)")
-        print("3. ❌ Ошибка (красное окно)")
-        print("4. ❓ Вопрос (окно с вопросом)")
+        # Выбор типа сообщения
+        print("\n📝 Создание VBS кода:")
+        print("1. Использовать шаблон")
+        print("2. Ввести вручную")
         
-        type_choice = input("Выберите тип [1-4]: ").strip()
+        code_choice = input("Выберите вариант [1-2]: ").strip()
         
-        type_map = {'1': 'info', '2': 'warning', '3': 'error', '4': 'question'}
-        msg_type = type_map.get(type_choice, 'info')
+        vbs_code = None
+        if code_choice == "1":
+            vbs_code = self.create_vbs_from_template()
+        elif code_choice == "2":
+            print("\n✍️ Введите код VBS (Ctrl+Z затем Enter для завершения):")
+            print("Пример: MsgBox \"Привет\", vbInformation, \"Сообщение\"")
+            print("="*40)
+            
+            lines = []
+            while True:
+                try:
+                    line = input()
+                    lines.append(line)
+                except EOFError:
+                    break
+            
+            vbs_code = "\n".join(lines)
+        else:
+            print("❌ Неверный выбор")
+            return
         
-        # Получатель
-        print("\nПолучатель:")
-        print("1. 📍 Мне самому (тест)")
-        print("2. 👨‍💻 Админу (нужен IP админа)")
-        print("3. 👥 Другому клиенту (нужен IP клиента)")
+        if not vbs_code or not vbs_code.strip():
+            print("❌ Код VBS не может быть пустым")
+            return
         
-        target_choice = input("Выберите получателя [1-3]: ").strip()
-        
-        target_ip = None
-        if target_choice == "2":
-            target_ip = input("IP адреса админа: ").strip()
-            if not target_ip:
-                print("❌ IP админа обязателен")
-                return
-        elif target_choice == "3":
-            target_ip = input("IP адреса клиента: ").strip()
-            if not target_ip:
-                print("❌ IP клиента обязателен")
-                return
-        
-        # Создаём VBS
-        vbs_code = self.create_vbs_script(title, message, msg_type)
-        
-        print(f"\n📋 Код VBS:\n{vbs_code}")
-        
-        # Отправляем
-        if target_choice == "1":
+        # Отправка
+        if not target_ip:
             # Запускаем локально
             print("\n▶️ Запускаю VBS локально...")
+            
             with tempfile.NamedTemporaryFile(mode='w', suffix='.vbs', delete=False, encoding='utf-8') as f:
                 f.write(vbs_code)
                 vbs_path = f.name
             
             if os.name == 'nt':
                 os.startfile(vbs_path)
-                print("✅ VBS запущен")
+                print("✅ VBS запущен на вашем компьютере")
             else:
-                print("⚠️ Только для Windows")
-        else:
-            # Отправляем админу
-            if self.send_vbs_to_admin(target_ip, vbs_code, target_ip if target_choice == "3" else None):
-                print("✅ Сообщение отправлено!")
-    
-    def show_status(self):
-        """Показывает статус клиента"""
-        print("\n📊 МОЙ СТАТУС")
-        print("="*40)
-        print(f"👤 Имя: {self.client_name}")
-        print(f"📍 IP: {self.local_ip}")
-        print(f"🔑 Токен: {self.client_token or 'Нет'}")
-        print(f"📨 Сообщений получено: {self.messages_received}")
-        print(f"⏱️ Последняя активность: {time.ctime(self.last_activity)}")
-        
-        if self.is_banned:
-            print(f"🚫 Статус: ЗАБАНЕН")
-            print(f"📝 Причина: {self.ban_reason}")
-        elif self.is_muted:
-            print(f"🔇 Статус: В МУТЕ")
-            if self.mute_until:
-                print(f"⏰ До: {self.mute_until}")
-        else:
-            print("✅ Статус: АКТИВЕН")
-        
-        print("="*40)
-    
-    def check_connection(self):
-        """Проверяет соединение с сервером"""
-        print("\n🌐 ПРОВЕРКА СОЕДИНЕНИЯ")
-        print("="*40)
-        
-        try:
-            response = requests.get(self.server_url, timeout=5)
-            print(f"✅ Сервер доступен (код: {response.status_code})")
+                print("⚠️ VBS работает только на Windows")
             
-            # Проверяем API
-            try:
-                api_response = requests.get(f"{self.server_url}/api/clients", timeout=3)
-                if api_response.status_code == 200:
-                    print("✅ API сервера работает")
-                else:
-                    print(f"⚠️ API недоступен (код: {api_response.status_code})")
-            except:
-                print("⚠️ API недоступен")
+            # Удаляем файл
+            threading.Timer(3, lambda: os.remove(vbs_path) if os.path.exists(vbs_path) else None).start()
+        else:
+            # Отправляем другому
+            if self.send_vbs_to_ip(target_ip, vbs_code):
+                print(f"✅ VBS отправлен на {target_ip}")
+            else:
+                print(f"❌ Не удалось отправить на {target_ip}")
+    
+    def create_vbs_menu(self):
+        """Меню создания VBS"""
+        vbs_code = self.create_vbs_from_template()
+        
+        if vbs_code:
+            print("\n💾 Что делать с VBS кодом?")
+            print("1. Запустить локально")
+            print("2. Отправить другому")
+            print("3. Сохранить в файл")
+            print("4. Назад")
+            
+            choice = input("\nВыберите действие [1-4]: ").strip()
+            
+            if choice == "1":
+                with tempfile.NamedTemporaryFile(mode='w', suffix='.vbs', delete=False, encoding='utf-8') as f:
+                    f.write(vbs_code)
+                    vbs_path = f.name
                 
-        except requests.ConnectionError:
-            print("❌ Сервер недоступен")
-        except Exception as e:
-            print(f"❌ Ошибка: {e}")
+                if os.name == 'nt':
+                    os.startfile(vbs_path)
+                    print("✅ VBS запущен")
+                else:
+                    print("⚠️ VBS работает только на Windows")
+            
+            elif choice == "2":
+                target_ip = input("IP получателя: ").strip()
+                if target_ip:
+                    self.send_vbs_to_ip(target_ip, vbs_code)
+                else:
+                    print("❌ IP обязателен")
+            
+            elif choice == "3":
+                filename = input("Имя файла (без расширения): ").strip()
+                if not filename:
+                    filename = "vbs_script"
+                
+                filename += ".vbs"
+                
+                with open(filename, 'w', encoding='utf-8') as f:
+                    f.write(vbs_code)
+                
+                print(f"✅ Файл сохранён: {os.path.abspath(filename)}")
+    
+    def run_local_vbs(self):
+        """Запуск локального VBS файла"""
+        print("\n💾 ЗАПУСК ЛОКАЛЬНОГО VBS ФАЙЛА")
+        print("="*40)
+        
+        print("Варианты:")
+        print("1. Создать новый VBS")
+        print("2. Запустить существующий файл")
+        
+        choice = input("\nВыберите вариант [1-2]: ").strip()
+        
+        if choice == "1":
+            self.create_vbs_menu()
+        elif choice == "2":
+            filename = input("Путь к VBS файлу: ").strip()
+            
+            if os.path.exists(filename) and filename.lower().endswith('.vbs'):
+                if os.name == 'nt':
+                    os.startfile(filename)
+                    print("✅ VBS файл запущен")
+                else:
+                    print("⚠️ VBS работает только на Windows")
+            else:
+                print("❌ Файл не найден или не является VBS")
+        else:
+            print("❌ Неверный выбор")
+    
+    def manage_users(self):
+        """Управление пользователями (админ)"""
+        print("\n👥 УПРАВЛЕНИЕ ПОЛЬЗОВАТЕЛЯМИ")
+        print("="*40)
+        print("Функционал доступен через веб-интерфейс.")
+        print(f"🌐 Откройте в браузере: {self.server_url}/admin")
+        print("\nНажмите Enter для продолжения...")
+        input()
+    
+    def show_stats(self):
+        """Показать статистику (админ)"""
+        print("\n📊 СТАТИСТИКА СИСТЕМЫ")
+        print("="*40)
+        print(f"👤 Текущий пользователь: {self.username}")
+        print(f"🎭 Роль: {'Администратор' if self.role == 'admin' else 'Пользователь'}")
+        print(f"📍 Ваш IP: {self.local_ip}")
+        print(f"⏰ Время: {time.strftime('%H:%M:%S')}")
+        print("\nДля подробной статистики используйте веб-интерфейс.")
+        print("Нажмите Enter для продолжения...")
+        input()
+    
+    def manage_blocks(self):
+        """Управление блокировками (админ)"""
+        print("\n🛡️ УПРАВЛЕНИЕ БЛОКИРОВКАМИ")
+        print("="*40)
+        print("Доступные действия:")
+        print("1. 🚫 Заблокировать IP")
+        print("2. ✅ Разблокировать IP")
+        print("3. 🔇 Замутить пользователя")
+        print("4. 🔊 Размутить пользователя")
+        print("5. 📜 Список блокировок")
+        
+        choice = input("\nВыберите действие [1-5]: ").strip()
+        
+        if choice == "1":
+            ip = input("IP для блокировки: ").strip()
+            reason = input("Причина: ").strip() or "Нарушение правил"
+            print(f"🚫 IP {ip} будет заблокирован по причине: {reason}")
+        
+        elif choice == "2":
+            ip = input("IP для разблокировки: ").strip()
+            print(f"✅ IP {ip} будет разблокирован")
+        
+        elif choice == "3":
+            user = input("Имя пользователя: ").strip()
+            duration = input("Длительность (минуты): ").strip() or "30"
+            print(f"🔇 Пользователь {user} будет замучен на {duration} минут")
+        
+        elif choice == "4":
+            user = input("Имя пользователя: ").strip()
+            print(f"🔊 Пользователь {user} будет размучен")
+        
+        elif choice == "5":
+            print("📜 Список блокировок будет отображаться в веб-интерфейсе")
+        
+        else:
+            print("❌ Неверный выбор")
+        
+        print("\nПримечание: Для реального управления используйте веб-интерфейс.")
+        print("Нажмите Enter для продолжения...")
+        input()
     
     def start(self):
         """Запускает клиент"""
-        print("="*60)
-        print("     КЛИЕНТ С АДМИН СИСТЕМОЙ")
-        print("="*60)
+        # Аутентификация
+        if not self.authenticate_user():
+            return
         
-        # Регистрируемся
-        self.register_on_server()
-        
-        # Запускаем потоки
-        heartbeat_thread = threading.Thread(target=self.send_heartbeat, daemon=True)
-        heartbeat_thread.start()
-        
-        listener_thread = threading.Thread(target=self.listen_for_messages, daemon=True)
+        # Запускаем слушатель VBS в отдельном потоке
+        listener_thread = threading.Thread(target=self.listen_for_vbs, daemon=True)
         listener_thread.start()
         
-        # Запускаем UI
-        self.start_client_ui()
+        # Запускаем heartbeat (если подключены к серверу)
+        if self.session_token:
+            heartbeat_thread = threading.Thread(target=self.send_heartbeat, daemon=True)
+            heartbeat_thread.start()
+        
+        print("\n✅ Клиент успешно запущен!")
+        print("📡 Ожидаю сообщения на порту 7777")
+        print("⚡ Используйте главное меню для действий")
+        
+        # Показываем главное меню
+        self.show_main_menu()
+    
+    def send_heartbeat(self):
+        """Отправляет heartbeat на сервер"""
+        while self.running and self.session_token:
+            try:
+                # Просто проверяем соединение
+                requests.get(f"{self.server_url}/dashboard", timeout=3)
+                time.sleep(30)
+            except:
+                time.sleep(30)
 
 def main():
-    print("🚀 Запуск клиента с админ системой")
-    print("="*60)
-    
-    # Запрашиваем URL сервера
-    server_url = input("Введите URL сервера админа (например: http://localhost:8080): ").strip()
-    if not server_url:
-        server_url = "http://localhost:8080"
-    
-    # Имя клиента
-    client_name = input("Введите имя этого компьютера: ").strip()
-    if not client_name:
-        client_name = socket.gethostname()
-    
-    # Создаём и запускаем клиент
-    client = AdminClient(server_url, client_name)
+    client = MultiUserClient()
     
     try:
         client.start()
     except KeyboardInterrupt:
-        print("\n\n👋 Завершение работы...")
+        print("\n\n👋 Программа завершена")
     except Exception as e:
         print(f"\n❌ Критическая ошибка: {e}")
+        import traceback
+        traceback.print_exc()
 
 if __name__ == "__main__":
     main()
