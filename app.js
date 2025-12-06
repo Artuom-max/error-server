@@ -634,3 +634,661 @@ class VBSApp {
 window.addEventListener('DOMContentLoaded', () => {
     window.vbsApp = new VBSApp();
 });
+
+// ============================================
+// ФУНКЦИИ ДЛЯ ОБУЧЕНИЯ
+// ============================================
+
+function showLearnTab(tabName) {
+    // Скрываем все вкладки обучения
+    document.querySelectorAll('.learn-tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelectorAll('.learn-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Показываем выбранную вкладку
+    document.getElementById(tabName + '-tab').classList.add('active');
+    event.target.classList.add('active');
+    
+    // Прокручиваем к началу
+    document.getElementById(tabName + '-tab').scrollIntoView({
+        behavior: 'smooth',
+        block: 'start'
+    });
+}
+
+function testLearnCode(vbsCode) {
+    try {
+        // Парсим VBS код
+        const msgBoxMatch = vbsCode.match(/MsgBox\s+"([^"]+)"\s*,\s*([^,]+)\s*,\s*"([^"]+)"/i);
+        
+        if (msgBoxMatch) {
+            const text = msgBoxMatch[1];
+            const vbConstant = msgBoxMatch[2];
+            const title = msgBoxMatch[3];
+            
+            // Определяем тип
+            let type = 'info';
+            if (vbConstant.includes('Critical')) type = 'error';
+            else if (vbConstant.includes('Exclamation')) type = 'warning';
+            else if (vbConstant.includes('Question')) type = 'question';
+            
+            // Определяем кнопки
+            let buttons = 'ok';
+            if (vbConstant.includes('YesNoCancel')) buttons = 'yesnocancel';
+            else if (vbConstant.includes('YesNo')) buttons = 'yesno';
+            else if (vbConstant.includes('OKCancel')) buttons = 'okcancel';
+            
+            // Показываем сообщение
+            showModalMessage(title, text, type, buttons);
+        } else {
+            showNotification("Не удалось распознать VBS код", "error");
+        }
+    } catch (error) {
+        showNotification("Ошибка: " + error.message, "error");
+    }
+}
+
+function loadLearnExample(exampleNumber) {
+    const examples = [
+        {
+            title: "Приветствие",
+            text: "Добро пожаловать в мир VBS!",
+            type: "info",
+            buttons: "ok"
+        },
+        {
+            title: "ОШИБКА",
+            text: "Не удалось выполнить операцию!",
+            type: "error",
+            buttons: "ok"
+        },
+        {
+            title: "ПРЕДУПРЕЖДЕНИЕ",
+            text: "Система будет перезагружена через 60 секунд.",
+            type: "warning",
+            buttons: "okcancel"
+        },
+        {
+            title: "Вопрос",
+            text: "Вы уверены что хотите продолжить?",
+            type: "question",
+            buttons: "yesno"
+        },
+        {
+            title: "Таймер",
+            text: "Сообщение 1: Ждите 2 секунды...",
+            type: "info",
+            buttons: "ok"
+        },
+        {
+            title: "Обработка ответа",
+            text: "Какой цвет вы предпочитаете?",
+            type: "question",
+            buttons: "yesno"
+        }
+    ];
+    
+    const example = examples[exampleNumber - 1];
+    if (example) {
+        // Загружаем в конструктор
+        document.getElementById('msgTitle').value = example.title;
+        document.getElementById('msgText').value = example.text;
+        
+        // Выбираем иконку
+        document.querySelectorAll('.icon-option').forEach(option => {
+            option.classList.remove('selected');
+            if (option.dataset.type === example.type) {
+                option.classList.add('selected');
+            }
+        });
+        
+        // Выбираем кнопки
+        document.getElementById('msgButtons').value = example.buttons;
+        
+        // Обновляем предпросмотр
+        updatePreview();
+        
+        // Переключаемся на вкладку создания
+        showSection('create');
+        
+        // Прокручиваем к верху
+        document.getElementById('createSection').scrollIntoView({ behavior: 'smooth' });
+        
+        showNotification(`Загружен пример: ${example.title}`, "success");
+    }
+}
+
+function testTimerExample() {
+    showModalMessage("Таймер", "Сообщение 1: Ждите 2 секунды...", "info", "ok");
+    
+    // Имитация задержки
+    setTimeout(() => {
+        showModalMessage("Таймер", "Сообщение 2: Прошло 2 секунды!", "info", "ok");
+    }, 2000);
+}
+
+function testResponseExample() {
+    showModalMessage(
+        "Обработка ответа",
+        "Какой цвет вы предпочитаете?",
+        "question",
+        "yesno"
+    );
+}
+
+function testInteractiveExample() {
+    const text = document.getElementById('learnText').value || "Моё тестовое сообщение";
+    const type = document.getElementById('learnType').value;
+    
+    showModalMessage(
+        "Моё сообщение",
+        text,
+        type,
+        "ok"
+    );
+}
+
+function testSleepExample() {
+    showModalMessage("Таймер", "Сообщение 1: Ждите 3 секунды...", "info", "ok");
+    
+    // Показываем имитацию загрузки
+    setTimeout(() => {
+        showModalMessage("Таймер", "Сообщение 2: Прошло 3 секунды!", "info", "ok");
+        setTimeout(() => {
+            showModalMessage("Таймер", "Сообщение 3: Готово!", "info", "ok");
+        }, 1000);
+    }, 3000);
+}
+
+function testAdvancedResponse() {
+    showModalMessage(
+        "Сохранение",
+        "Сохранить изменения в файле?",
+        "question",
+        "yesnocancel"
+    );
+}
+
+function testLoopExample() {
+    let count = 0;
+    
+    function showNextMessage() {
+        count++;
+        if (count <= 3) {
+            showModalMessage(
+                "Цикл",
+                `Сообщение номер ${count}`,
+                "info",
+                "ok"
+            );
+            
+            if (count < 3) {
+                setTimeout(showNextMessage, 1000);
+            }
+        }
+    }
+    
+    showNextMessage();
+}
+
+function copyQuickCode(vbsCode) {
+    navigator.clipboard.writeText(vbsCode).then(() => {
+        showNotification("Код скопирован в буфер обмена!", "success");
+    }).catch(err => {
+        showNotification("Не удалось скопировать код", "error");
+    });
+}
+
+// ============================================
+// ФУНКЦИИ ДЛЯ НАСТРОЕК
+// ============================================
+
+function showSettingsTab(tabName) {
+    // Скрываем все вкладки настроек
+    document.querySelectorAll('.settings-tab-content').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    document.querySelectorAll('.settings-tab').forEach(tab => {
+        tab.classList.remove('active');
+    });
+    
+    // Показываем выбранную вкладку
+    document.getElementById(tabName + '-tab').classList.add('active');
+    event.target.classList.add('active');
+    
+    // Загружаем данные для вкладки
+    if (tabName === 'account') {
+        loadAccountData();
+    } else if (tabName === 'appearance') {
+        loadAppearanceSettings();
+    } else if (tabName === 'notifications') {
+        loadNotificationSettings();
+    }
+}
+
+function selectTheme(theme) {
+    // Убираем выделение со всех тем
+    document.querySelectorAll('.theme-option').forEach(option => {
+        option.classList.remove('active');
+    });
+    
+    // Выделяем выбранную тему
+    event.target.classList.add('active');
+    
+    // Обновляем предпросмотр темы
+    updateThemePreview(theme);
+}
+
+function updateThemePreview(theme) {
+    const preview = document.getElementById('themePreview');
+    
+    // Сбрасываем стили
+    preview.style.cssText = '';
+    
+    // Применяем стили темы
+    switch(theme) {
+        case 'dark':
+            preview.style.background = '#2c3e50';
+            preview.style.color = '#ecf0f1';
+            preview.querySelector('.preview-header').style.background = '#34495e';
+            preview.querySelector('.preview-buttons').style.background = '#2c3e50';
+            break;
+        case 'blue':
+            preview.style.background = 'linear-gradient(135deg, #4a6fa5, #166088)';
+            preview.style.color = 'white';
+            preview.querySelector('.preview-header').style.background = 'rgba(255,255,255,0.2)';
+            preview.querySelector('.preview-buttons').style.background = 'rgba(255,255,255,0.1)';
+            break;
+        case 'purple':
+            preview.style.background = 'linear-gradient(135deg, #667eea, #764ba2)';
+            preview.style.color = 'white';
+            preview.querySelector('.preview-header').style.background = 'rgba(255,255,255,0.2)';
+            preview.querySelector('.preview-buttons').style.background = 'rgba(255,255,255,0.1)';
+            break;
+        default: // light
+            preview.style.background = 'white';
+            preview.style.color = '#333';
+            preview.querySelector('.preview-header').style.background = 'linear-gradient(to bottom, #f0f0f0, #e0e0e0)';
+            preview.querySelector('.preview-buttons').style.background = '#f8f8f8';
+    }
+}
+
+function loadAccountData() {
+    // Загружаем данные пользователя
+    const user = JSON.parse(localStorage.getItem('currentUser') || '{"username":"Гость","role":"user","avatar":"👤"}');
+    
+    document.getElementById('username').value = user.username;
+    document.getElementById('userRole').value = user.role;
+    document.getElementById('currentRole').textContent = 
+        user.role === 'admin' ? 'Администратор' : 
+        user.role === 'developer' ? 'Разработчик' : 'Пользователь';
+    document.getElementById('settingsAvatar').textContent = user.avatar;
+    
+    // Загружаем статистику
+    const history = JSON.parse(localStorage.getItem('vbsHistory') || '[]');
+    const templates = JSON.parse(localStorage.getItem('vbsTemplates') || '[]');
+    const messages = history.length;
+    
+    document.getElementById('messagesCount').textContent = messages;
+    document.getElementById('templatesCount').textContent = templates.length;
+    document.getElementById('historyCount').textContent = messages;
+}
+
+function loadAppearanceSettings() {
+    // Загружаем сохранённые настройки внешнего вида
+    const settings = JSON.parse(localStorage.getItem('appearanceSettings') || '{}');
+    
+    if (settings.theme) {
+        document.querySelector(`.theme-option[data-theme="${settings.theme}"]`)?.classList.add('active');
+        updateThemePreview(settings.theme);
+    }
+    
+    if (settings.fontSize) {
+        document.getElementById('fontSize').value = settings.fontSize;
+    }
+    
+    if (settings.animations !== undefined) {
+        document.getElementById('animations').checked = settings.animations;
+    }
+    
+    if (settings.compactMode !== undefined) {
+        document.getElementById('compactMode').checked = settings.compactMode;
+    }
+}
+
+function loadNotificationSettings() {
+    // Загружаем сохранённые настройки уведомлений
+    const settings = JSON.parse(localStorage.getItem('notificationSettings') || '{}');
+    
+    if (settings.showNotifications !== undefined) {
+        document.getElementById('showNotifications').checked = settings.showNotifications;
+    }
+    
+    if (settings.position) {
+        document.getElementById('notificationPosition').value = settings.position;
+    }
+    
+    if (settings.duration) {
+        document.getElementById('notificationDuration').value = settings.duration;
+        document.getElementById('durationValue').textContent = settings.duration + ' секунд';
+    }
+    
+    if (settings.notifySuccess !== undefined) {
+        document.getElementById('notifySuccess').checked = settings.notifySuccess;
+    }
+    
+    if (settings.notifyError !== undefined) {
+        document.getElementById('notifyError').checked = settings.notifyError;
+    }
+    
+    if (settings.notifyInfo !== undefined) {
+        document.getElementById('notifyInfo').checked = settings.notifyInfo;
+    }
+    
+    if (settings.notifyWarning !== undefined) {
+        document.getElementById('notifyWarning').checked = settings.notifyWarning;
+    }
+}
+
+// Обновление значения длительности уведомлений
+document.getElementById('notificationDuration').addEventListener('input', function() {
+    document.getElementById('durationValue').textContent = this.value + ' секунд';
+});
+
+function testNotification(type) {
+    const messages = {
+        success: "✅ Операция выполнена успешно!",
+        error: "❌ Произошла ошибка при выполнении",
+        info: "ℹ️ Это информационное сообщение",
+        warning: "⚠️ Внимание! Проверьте настройки"
+    };
+    
+    showNotification(messages[type], type);
+}
+
+function saveSettings() {
+    // Сохраняем основные настройки
+    const generalSettings = {
+        autoSave: document.getElementById('autoSave').checked,
+        soundNotifications: document.getElementById('soundNotifications').checked,
+        autoScroll: document.getElementById('autoScroll').checked,
+        historyLimit: document.getElementById('historyLimit').value
+    };
+    
+    // Сохраняем настройки внешнего вида
+    const appearanceSettings = {
+        theme: document.querySelector('.theme-option.active')?.dataset.theme || 'light',
+        fontSize: document.getElementById('fontSize').value,
+        animations: document.getElementById('animations').checked,
+        compactMode: document.getElementById('compactMode').checked
+    };
+    
+    // Сохраняем настройки уведомлений
+    const notificationSettings = {
+        showNotifications: document.getElementById('showNotifications').checked,
+        position: document.getElementById('notificationPosition').value,
+        duration: document.getElementById('notificationDuration').value,
+        notifySuccess: document.getElementById('notifySuccess').checked,
+        notifyError: document.getElementById('notifyError').checked,
+        notifyInfo: document.getElementById('notifyInfo').checked,
+        notifyWarning: document.getElementById('notifyWarning').checked
+    };
+    
+    // Сохраняем настройки аккаунта
+    const user = {
+        username: document.getElementById('username').value,
+        role: document.getElementById('userRole').value,
+        avatar: document.getElementById('settingsAvatar').textContent
+    };
+    
+    // Сохраняем в localStorage
+    localStorage.setItem('generalSettings', JSON.stringify(generalSettings));
+    localStorage.setItem('appearanceSettings', JSON.stringify(appearanceSettings));
+    localStorage.setItem('notificationSettings', JSON.stringify(notificationSettings));
+    localStorage.setItem('currentUser', JSON.stringify(user));
+    
+    // Применяем настройки
+    applySettings(generalSettings, appearanceSettings, notificationSettings, user);
+    
+    showNotification("Настройки успешно сохранены!", "success");
+}
+
+function applySettings(general, appearance, notifications, user) {
+    // Применяем настройки внешнего вида
+    document.body.className = appearance.theme + '-mode';
+    
+    // Применяем размер шрифта
+    document.body.style.fontSize = 
+        appearance.fontSize === 'small' ? '14px' :
+        appearance.fontSize === 'large' ? '18px' :
+        appearance.fontSize === 'xlarge' ? '20px' : '16px';
+    
+    // Применяем компактный режим
+    if (appearance.compactMode) {
+        document.body.classList.add('compact-mode');
+    } else {
+        document.body.classList.remove('compact-mode');
+    }
+    
+    // Обновляем пользователя
+    document.getElementById('userName').textContent = user.username;
+    document.getElementById('userRole').textContent = 
+        user.role === 'admin' ? 'Администратор' : 
+        user.role === 'developer' ? 'Разработчик' : 'Пользователь';
+    document.getElementById('userAvatar').textContent = user.avatar;
+    
+    // Обновляем бейдж роли
+    const badge = document.getElementById('userRole');
+    if (user.role === 'admin') {
+        badge.style.background = 'linear-gradient(135deg, #e74c3c, #c0392b)';
+    } else if (user.role === 'developer') {
+        badge.style.background = 'linear-gradient(135deg, #9b59b6, #8e44ad)';
+    } else {
+        badge.style.background = 'linear-gradient(135deg, var(--accent), #3ab08d)';
+    }
+}
+
+function resetSettings() {
+    if (confirm("Вы уверены что хотите сбросить все настройки к значениям по умолчанию?")) {
+        // Сбрасываем чекбоксы
+        document.getElementById('autoSave').checked = true;
+        document.getElementById('soundNotifications').checked = false;
+        document.getElementById('autoScroll').checked = true;
+        document.getElementById('historyLimit').value = '100';
+        
+        // Сбрасываем внешний вид
+        document.querySelectorAll('.theme-option').forEach(option => {
+            option.classList.remove('active');
+        });
+        document.querySelector('.theme-option[data-theme="light"]').classList.add('active');
+        document.getElementById('fontSize').value = 'normal';
+        document.getElementById('animations').checked = true;
+        document.getElementById('compactMode').checked = false;
+        
+        // Сбрасываем уведомления
+        document.getElementById('showNotifications').checked = true;
+        document.getElementById('notificationPosition').value = 'top-left';
+        document.getElementById('notificationDuration').value = 3;
+        document.getElementById('durationValue').textContent = '3 секунды';
+        document.getElementById('notifySuccess').checked = true;
+        document.getElementById('notifyError').checked = true;
+        document.getElementById('notifyInfo').checked = true;
+        document.getElementById('notifyWarning').checked = false;
+        
+        // Сбрасываем аккаунт
+        document.getElementById('username').value = 'Гость';
+        document.getElementById('userRole').value = 'user';
+        
+        showNotification("Настройки сброшены к значениям по умолчанию", "info");
+    }
+}
+
+function changeAvatar() {
+    const avatars = ['👤', '👨', '👩', '👨‍💻', '👩‍💻', '👑', '🎩', '🦸', '🦸‍♂️', '🦸‍♀️', '🧙', '🧙‍♂️', '🧙‍♀️'];
+    const randomAvatar = avatars[Math.floor(Math.random() * avatars.length)];
+    
+    document.getElementById('settingsAvatar').textContent = randomAvatar;
+    showNotification("Аватар изменён на: " + randomAvatar, "success");
+}
+
+function exportData() {
+    const data = {
+        user: JSON.parse(localStorage.getItem('currentUser') || '{}'),
+        history: JSON.parse(localStorage.getItem('vbsHistory') || '[]'),
+        templates: JSON.parse(localStorage.getItem('vbsTemplates') || '[]'),
+        settings: {
+            general: JSON.parse(localStorage.getItem('generalSettings') || '{}'),
+            appearance: JSON.parse(localStorage.getItem('appearanceSettings') || '{}'),
+            notifications: JSON.parse(localStorage.getItem('notificationSettings') || '{}')
+        },
+        exportDate: new Date().toISOString(),
+        version: '2.0.0'
+    };
+    
+    const dataStr = JSON.stringify(data, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    
+    const exportFileDefaultName = 'vbs-simulator-backup.json';
+    
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+    
+    showNotification("Данные успешно экспортированы", "success");
+}
+
+function importData() {
+    const input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json';
+    
+    input.onchange = function(e) {
+        const file = e.target.files[0];
+        const reader = new FileReader();
+        
+        reader.onload = function(event) {
+            try {
+                const data = JSON.parse(event.target.result);
+                
+                // Проверяем версию
+                if (data.version !== '2.0.0') {
+                    showNotification("Версия файла не поддерживается", "error");
+                    return;
+                }
+                
+                // Импортируем данные
+                if (data.user) localStorage.setItem('currentUser', JSON.stringify(data.user));
+                if (data.history) localStorage.setItem('vbsHistory', JSON.stringify(data.history));
+                if (data.templates) localStorage.setItem('vbsTemplates', JSON.stringify(data.templates));
+                
+                if (data.settings?.general) {
+                    localStorage.setItem('generalSettings', JSON.stringify(data.settings.general));
+                }
+                if (data.settings?.appearance) {
+                    localStorage.setItem('appearanceSettings', JSON.stringify(data.settings.appearance));
+                }
+                if (data.settings?.notifications) {
+                    localStorage.setItem('notificationSettings', JSON.stringify(data.settings.notifications));
+                }
+                
+                showNotification("Данные успешно импортированы", "success");
+                
+                // Перезагружаем страницу для применения настроек
+                setTimeout(() => {
+                    location.reload();
+                }, 1000);
+                
+            } catch (error) {
+                showNotification("Ошибка при импорте данных: " + error.message, "error");
+            }
+        };
+        
+        reader.readAsText(file);
+    };
+    
+    input.click();
+}
+
+function clearData() {
+    if (confirm("Вы уверены что хотите удалить ВСЕ данные? Это действие нельзя отменить!")) {
+        if (confirm("Точно? Будут удалены все сообщения, шаблоны и настройки!")) {
+            localStorage.clear();
+            showNotification("Все данные удалены", "success");
+            setTimeout(() => {
+                location.reload();
+            }, 1000);
+        }
+    }
+}
+
+function checkForUpdates() {
+    showNotification("Проверка обновлений...", "info");
+    
+    setTimeout(() => {
+        showNotification("У вас установлена последняя версия", "success");
+    }, 1500);
+}
+
+function showChangelog() {
+    const changelog = `
+<h4>Версия 2.0.0</h4>
+<ul>
+    <li>Полностью переработанный интерфейс</li>
+    <li>Добавлена система обучения VBS</li>
+    <li>Расширенные настройки</li>
+    <li>Экспорт/импорт данных</li>
+    <li>Тёмная тема</li>
+</ul>
+
+<h4>Версия 1.5.0</h4>
+<ul>
+    <li>Добавлена галерея шаблонов</li>
+    <li>История сообщений</li>
+    <li>Улучшенный конструктор</li>
+</ul>
+
+<h4>Версия 1.0.0</h4>
+<ul>
+    <li>Первоначальный выпуск</li>
+    <li>Базовый конструктор VBS</li>
+    <li>Эмуляция MessageBox</li>
+</ul>
+`;
+    
+    showModalMessage("История изменений", changelog, "info", "ok");
+}
+
+function reportBug() {
+    const bugReport = `
+Для сообщения об ошибке:
+1. Опишите что произошло
+2. Что вы ожидали получить
+3. Шаги для воспроизведения
+
+Отправьте описание на email:
+support@vbs-simulator.example.com
+
+Или создайте issue на GitHub:
+github.com/username/vbs-simulator/issues
+`;
+    
+    showModalMessage("Сообщить об ошибке", bugReport, "info", "ok");
+}
+
+// Загрузка настроек при старте
+window.addEventListener('DOMContentLoaded', function() {
+    // Загружаем сохранённые настройки
+    const generalSettings = JSON.parse(localStorage.getItem('generalSettings') || '{}');
+    const appearanceSettings = JSON.parse(localStorage.getItem('appearanceSettings') || '{}');
+    const notificationSettings = JSON.parse(localStorage.getItem('notificationSettings') || '{}');
+    const user = JSON.parse(localStorage.getItem('currentUser') || '{"username":"Гость","role":"user","avatar":"👤"}');
+    
+    // Применяем настройки если они есть
+    if (Object.keys(appearanceSettings).length > 0) {
+        applySettings(generalSettings, appearanceSettings, notificationSettings, user);
+    }
+});
