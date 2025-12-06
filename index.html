@@ -773,23 +773,775 @@
                 
                 <!-- Обучение -->
                 <section class="card" id="learnSection" style="display: none;">
-                    <h2><i class="fas fa-graduation-cap"></i> Обучение VBS</h2>
-                    <div id="learnContent">
-                        <p>Изучите основы VBS скриптов прямо здесь!</p>
-                        <!-- Контент обучения будет загружен здесь -->
+    <h2><i class="fas fa-graduation-cap"></i> Обучение VBS</h2>
+    
+    <div id="learnContent">
+        <div class="learn-tabs">
+            <button class="learn-tab active" onclick="showLearnTab('basics')">Основы</button>
+            <button class="learn-tab" onclick="showLearnTab('examples')">Примеры</button>
+            <button class="learn-tab" onclick="showLearnTab('advanced')">Продвинутое</button>
+            <button class="learn-tab" onclick="showLearnTab('cheatsheet')">Шпаргалка</button>
+        </div>
+        
+        <div class="learn-content">
+            <!-- Основы VBS -->
+            <div id="basics-tab" class="learn-tab-content active">
+                <h3><i class="fas fa-star"></i> Основы VBS скриптов</h3>
+                
+                <div class="learn-item">
+                    <h4><i class="fas fa-comment"></i> Что такое VBS?</h4>
+                    <p>VBS (Visual Basic Script) - это скриптовый язык для Windows, который позволяет создавать всплывающие сообщения и автоматизировать задачи.</p>
+                    <div class="code-example">
+                        <div class="code-title">Простой пример:</div>
+                        <pre>MsgBox "Привет, мир!", vbInformation, "Моё сообщение"</pre>
+                        <button class="btn-test" onclick="testLearnCode('MsgBox \"Привет, мир!\", vbInformation, \"Пример\"')">
+                            <i class="fas fa-play"></i> Запустить пример
+                        </button>
                     </div>
-                </section>
+                </div>
+                
+                <div class="learn-item">
+                    <h4><i class="fas fa-window-maximize"></i> Структура MsgBox</h4>
+                    <p>Команда <code>MsgBox</code> имеет три основных параметра:</p>
+                    <div class="code-example">
+                        <pre>MsgBox "текст_сообщения", тип_окна, "заголовок"</pre>
+                    </div>
+                    <ul class="learn-list">
+                        <li><strong>Текст сообщения</strong> - что будет показано в окне</li>
+                        <li><strong>Тип окна</strong> - иконка и кнопки (vbInformation, vbCritical и т.д.)</li>
+                        <li><strong>Заголовок</strong> - текст в заголовке окна</li>
+                    </ul>
+                </div>
+                
+                <div class="learn-item">
+                    <h4><i class="fas fa-icons"></i> Типы иконок</h4>
+                    <div class="icons-grid">
+                        <div class="icon-learn">
+                            <div class="icon-learn-icon">ℹ️</div>
+                            <div class="icon-learn-title">vbInformation</div>
+                            <div class="icon-learn-desc">Информационное сообщение (синий)</div>
+                        </div>
+                        <div class="icon-learn">
+                            <div class="icon-learn-icon">❌</div>
+                            <div class="icon-learn-title">vbCritical</div>
+                            <div class="icon-learn-desc">Критическая ошибка (красный)</div>
+                        </div>
+                        <div class="icon-learn">
+                            <div class="icon-learn-icon">⚠️</div>
+                            <div class="icon-learn-title">vbExclamation</div>
+                            <div class="icon-learn-desc">Предупреждение (жёлтый)</div>
+                        </div>
+                        <div class="icon-learn">
+                            <div class="icon-learn-icon">❓</div>
+                            <div class="icon-learn-title">vbQuestion</div>
+                            <div class="icon-learn-desc">Вопрос (синий с ?)</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="learn-item">
+                    <h4><i class="fas fa-mouse-pointer"></i> Типы кнопок</h4>
+                    <div class="buttons-grid">
+                        <div class="button-learn">
+                            <button class="win-button">OK</button>
+                            <div class="button-learn-title">vbOKOnly</div>
+                            <div class="button-learn-code"><code>MsgBox "Текст", vbOKOnly, "Заголовок"</code></div>
+                        </div>
+                        <div class="button-learn">
+                            <button class="win-button">OK</button>
+                            <button class="win-button">Отмена</button>
+                            <div class="button-learn-title">vbOKCancel</div>
+                            <div class="button-learn-code"><code>MsgBox "Текст", vbOKCancel, "Заголовок"</code></div>
+                        </div>
+                        <div class="button-learn">
+                            <button class="win-button">Да</button>
+                            <button class="win-button">Нет</button>
+                            <div class="button-learn-title">vbYesNo</div>
+                            <div class="button-learn-code"><code>MsgBox "Текст", vbYesNo, "Заголовок"</code></div>
+                        </div>
+                        <div class="button-learn">
+                            <button class="win-button">Да</button>
+                            <button class="win-button">Нет</button>
+                            <button class="win-button">Отмена</button>
+                            <div class="button-learn-title">vbYesNoCancel</div>
+                            <div class="button-learn-code"><code>MsgBox "Текст", vbYesNoCancel, "Заголовок"</code></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Примеры -->
+            <div id="examples-tab" class="learn-tab-content">
+                <h3><i class="fas fa-code"></i> Практические примеры</h3>
+                
+                <div class="examples-grid">
+                    <div class="example-card" onclick="loadLearnExample(1)">
+                        <div class="example-icon">ℹ️</div>
+                        <div class="example-title">Приветствие</div>
+                        <div class="example-code">MsgBox "Добро пожаловать!", vbInformation, "Приветствие"</div>
+                        <button class="btn-test-small" onclick="event.stopPropagation(); testLearnCode('MsgBox \"Добро пожаловать!\", vbInformation, \"Приветствие\"')">
+                            Тест
+                        </button>
+                    </div>
+                    
+                    <div class="example-card" onclick="loadLearnExample(2)">
+                        <div class="example-icon">❌</div>
+                        <div class="example-title">Ошибка</div>
+                        <div class="example-code">MsgBox "Файл не найден!", vbCritical, "ОШИБКА"</div>
+                        <button class="btn-test-small" onclick="event.stopPropagation(); testLearnCode('MsgBox \"Файл не найден!\", vbCritical, \"ОШИБКА\"')">
+                            Тест
+                        </button>
+                    </div>
+                    
+                    <div class="example-card" onclick="loadLearnExample(3)">
+                        <div class="example-icon">⚠️</div>
+                        <div class="example-title">Предупреждение</div>
+                        <div class="example-code">MsgBox "Закройте все программы", vbExclamation, "ПРЕДУПРЕЖДЕНИЕ"</div>
+                        <button class="btn-test-small" onclick="event.stopPropagation(); testLearnCode('MsgBox \"Закройте все программы\", vbExclamation, \"ПРЕДУПРЕЖДЕНИЕ\"')">
+                            Тест
+                        </button>
+                    </div>
+                    
+                    <div class="example-card" onclick="loadLearnExample(4)">
+                        <div class="example-icon">❓</div>
+                        <div class="example-title">Вопрос с выбором</div>
+                        <div class="example-code">MsgBox "Вы уверены?", vbYesNo + vbQuestion, "Вопрос"</div>
+                        <button class="btn-test-small" onclick="event.stopPropagation(); testLearnCode('MsgBox \"Вы уверены?\", vbYesNo + vbQuestion, \"Вопрос\"')">
+                            Тест
+                        </button>
+                    </div>
+                    
+                    <div class="example-card" onclick="loadLearnExample(5)">
+                        <div class="example-icon">⏱️</div>
+                        <div class="example-title">Таймер</div>
+                        <div class="example-code">MsgBox "Ждите 3 сек...", vbInformation, "Таймер"</div>
+                        <button class="btn-test-small" onclick="event.stopPropagation(); testTimerExample()">
+                            Тест
+                        </button>
+                    </div>
+                    
+                    <div class="example-card" onclick="loadLearnExample(6)">
+                        <div class="example-icon">🔄</div>
+                        <div class="example-title">Обработка ответа</div>
+                        <div class="example-code">If response = vbYes Then<br>&nbsp;&nbsp;MsgBox "Вы согласились"</div>
+                        <button class="btn-test-small" onclick="event.stopPropagation(); testResponseExample()">
+                            Тест
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="learn-item">
+                    <h4><i class="fas fa-play-circle"></i> Интерактивный пример</h4>
+                    <p>Попробуйте создать своё сообщение:</p>
+                    <div class="interactive-example">
+                        <div class="form-group">
+                            <label>Текст:</label>
+                            <input type="text" id="learnText" value="Моё тестовое сообщение" placeholder="Введите текст...">
+                        </div>
+                        <div class="form-group">
+                            <label>Тип:</label>
+                            <select id="learnType">
+                                <option value="info">Информация</option>
+                                <option value="error">Ошибка</option>
+                                <option value="warning">Предупреждение</option>
+                                <option value="question">Вопрос</option>
+                            </select>
+                        </div>
+                        <button class="btn-test" onclick="testInteractiveExample()">
+                            <i class="fas fa-rocket"></i> Запустить мой пример
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Продвинутое -->
+            <div id="advanced-tab" class="learn-tab-content">
+                <h3><i class="fas fa-cogs"></i> Продвинутые возможности</h3>
+                
+                <div class="learn-item">
+                    <h4><i class="fas fa-clock"></i> Задержки (Sleep)</h4>
+                    <p>Используйте <code>WScript.Sleep</code> для создания пауз:</p>
+                    <div class="code-example">
+                        <div class="code-title">Пример с задержкой:</div>
+                        <pre>MsgBox "Сообщение 1", vbInformation, "Таймер"
+WScript.Sleep 3000  ' 3000 миллисекунд = 3 секунды
+MsgBox "Сообщение 2", vbInformation, "Таймер"</pre>
+                        <button class="btn-test" onclick="testSleepExample()">
+                            <i class="fas fa-hourglass-half"></i> Запустить таймер
+                        </button>
+                    </div>
+                    <p><strong>Важно:</strong> 1000 миллисекунд = 1 секунда</p>
+                </div>
+                
+                <div class="learn-item">
+                    <h4><i class="fas fa-code-branch"></i> Обработка ответов</h4>
+                    <p>Вы можете проверять, какую кнопку нажал пользователь:</p>
+                    <div class="code-example">
+                        <div class="code-title">Пример с обработкой:</div>
+                        <pre>response = MsgBox("Сохранить файл?", vbYesNoCancel + vbQuestion, "Сохранение")
+
+Select Case response
+    Case vbYes
+        MsgBox "Файл сохранён", vbInformation, "Результат"
+    Case vbNo
+        MsgBox "Файл не сохранён", vbInformation, "Результат"
+    Case vbCancel
+        MsgBox "Действие отменено", vbInformation, "Результат"
+End Select</pre>
+                        <button class="btn-test" onclick="testAdvancedResponse()">
+                            <i class="fas fa-play"></i> Запустить пример
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="learn-item">
+                    <h4><i class="fas fa-redo"></i> Циклы</h4>
+                    <p>Создавайте несколько сообщений в цикле:</p>
+                    <div class="code-example">
+                        <div class="code-title">Пример цикла:</div>
+                        <pre>For i = 1 To 3
+    MsgBox "Сообщение номер " & i, vbInformation, "Цикл"
+    WScript.Sleep 1000
+Next</pre>
+                        <button class="btn-test" onclick="testLoopExample()">
+                            <i class="fas fa-sync-alt"></i> Запустить цикл
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="learn-item">
+                    <h4><i class="fas fa-exclamation-triangle"></i> Важные предупреждения</h4>
+                    <div class="warning-box">
+                        <h5><i class="fas fa-ban"></i> Что НЕ делать:</h5>
+                        <ul>
+                            <li><strong>Не создавайте бесконечные циклы</strong> - зависнет система</li>
+                            <li><strong>Не отправляйте сообщения незнакомцам</strong> - это раздражает</li>
+                            <li><strong>Не имитируйте системные ошибки</strong> - это может напугать</li>
+                            <li><strong>Не используйте без предупреждения</strong> - всегда спрашивайте разрешение</li>
+                        </ul>
+                        
+                        <h5><i class="fas fa-check-circle"></i> Лучшие практики:</h5>
+                        <ul>
+                            <li><strong>Всегда тестируйте на себе</strong> перед отправкой</li>
+                            <li><strong>Используйте понятные заголовки</strong></li>
+                            <li><strong>Выбирайте подходящий тип</strong> (ошибка, информация, вопрос)</li>
+                            <li><strong>Сохраняйте полезные скрипты</strong> как шаблоны</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Шпаргалка -->
+            <div id="cheatsheet-tab" class="learn-tab-content">
+                <h3><i class="fas fa-book"></i> Шпаргалка по VBS</h3>
+                
+                <div class="cheatsheet-grid">
+                    <div class="cheatsheet-card">
+                        <div class="cheatsheet-title">📋 Основной синтаксис</div>
+                        <div class="cheatsheet-content">
+                            <pre>MsgBox "текст", тип, "заголовок"</pre>
+                            <div class="cheatsheet-example">
+                                <strong>Пример:</strong><br>
+                                <code>MsgBox "Привет!", vbInformation, "Моё сообщение"</code>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="cheatsheet-card">
+                        <div class="cheatsheet-title">🎨 Типы иконок</div>
+                        <div class="cheatsheet-content">
+                            <table class="cheatsheet-table">
+                                <tr>
+                                    <td><code>vbInformation</code></td>
+                                    <td>ℹ️ Информация</td>
+                                </tr>
+                                <tr>
+                                    <td><code>vbCritical</code></td>
+                                    <td>❌ Ошибка</td>
+                                </tr>
+                                <tr>
+                                    <td><code>vbExclamation</code></td>
+                                    <td>⚠️ Предупреждение</td>
+                                </tr>
+                                <tr>
+                                    <td><code>vbQuestion</code></td>
+                                    <td>❓ Вопрос</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="cheatsheet-card">
+                        <div class="cheatsheet-title">🔄 Кнопки</div>
+                        <div class="cheatsheet-content">
+                            <table class="cheatsheet-table">
+                                <tr>
+                                    <td><code>vbOKOnly</code></td>
+                                    <td>OK</td>
+                                </tr>
+                                <tr>
+                                    <td><code>vbOKCancel</code></td>
+                                    <td>OK, Отмена</td>
+                                </tr>
+                                <tr>
+                                    <td><code>vbYesNo</code></td>
+                                    <td>Да, Нет</td>
+                                </tr>
+                                <tr>
+                                    <td><code>vbYesNoCancel</code></td>
+                                    <td>Да, Нет, Отмена</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                    
+                    <div class="cheatsheet-card">
+                        <div class="cheatsheet-title">⏱️ Задержки</div>
+                        <div class="cheatsheet-content">
+                            <pre>WScript.Sleep время_в_миллисекундах</pre>
+                            <div class="cheatsheet-example">
+                                <strong>Примеры:</strong><br>
+                                • <code>WScript.Sleep 1000</code> - 1 секунда<br>
+                                • <code>WScript.Sleep 5000</code> - 5 секунд<br>
+                                • <code>WScript.Sleep 30000</code> - 30 секунд
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="cheatsheet-card">
+                        <div class="cheatsheet-title">💾 Переменные</div>
+                        <div class="cheatsheet-content">
+                            <pre>имя_переменной = значение</pre>
+                            <div class="cheatsheet-example">
+                                <strong>Пример:</strong><br>
+                                <code>userName = "Антон"<br>MsgBox "Привет, " & userName</code>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="cheatsheet-card">
+                        <div class="cheatsheet-title">🔄 Обработка ответов</div>
+                        <div class="cheatsheet-content">
+                            <pre>response = MsgBox("Вопрос?", vbYesNo, "Заголовок")
+If response = vbYes Then
+    ' Действие если ДА
+Else
+    ' Действие если НЕТ
+End If</pre>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="learn-item">
+                    <h4><i class="fas fa-download"></i> Быстрые команды</h4>
+                    <div class="quick-commands">
+                        <button class="btn-quick" onclick="copyQuickCode('MsgBox \"Ошибка!\", vbCritical, \"ОШИБКА\"')">
+                            ❌ Ошибка
+                        </button>
+                        <button class="btn-quick" onclick="copyQuickCode('MsgBox \"Внимание!\", vbExclamation, \"ПРЕДУПРЕЖДЕНИЕ\"')">
+                            ⚠️ Предупреждение
+                        </button>
+                        <button class="btn-quick" onclick="copyQuickCode('MsgBox \"Информация\", vbInformation, \"СООБЩЕНИЕ\"')">
+                            ℹ️ Информация
+                        </button>
+                        <button class="btn-quick" onclick="copyQuickCode('MsgBox \"Вы уверены?\", vbYesNo + vbQuestion, \"ВОПРОС\"')">
+                            ❓ Вопрос
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
                 
                 <!-- Настройки -->
                 <section class="card" id="settingsSection" style="display: none;">
-                    <h2><i class="fas fa-cog"></i> Настройки</h2>
-                    <div id="settingsContent">
-                        <p>Настройте ваш опыт использования VBS симулятора.</p>
-                        <!-- Настройки будут здесь -->
-                    </div>
-                </section>
-            </main>
+    <h2><i class="fas fa-cog"></i> Настройки</h2>
+    
+    <div id="settingsContent">
+        <div class="settings-tabs">
+            <button class="settings-tab active" onclick="showSettingsTab('general')">Основные</button>
+            <button class="settings-tab" onclick="showSettingsTab('appearance')">Внешний вид</button>
+            <button class="settings-tab" onclick="showSettingsTab('notifications')">Уведомления</button>
+            <button class="settings-tab" onclick="showSettingsTab('account')">Аккаунт</button>
+            <button class="settings-tab" onclick="showSettingsTab('about')">О программе</button>
         </div>
+        
+        <div class="settings-content">
+            <!-- Основные настройки -->
+            <div id="general-tab" class="settings-tab-content active">
+                <h3><i class="fas fa-sliders-h"></i> Основные настройки</h3>
+                
+                <div class="settings-group">
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="setting-title">Автосохранение</div>
+                            <div class="setting-desc">Автоматически сохранять историю сообщений</div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="autoSave" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="setting-title">Звуковые уведомления</div>
+                            <div class="setting-desc">Воспроизводить звук при появлении сообщений</div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="soundNotifications">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="setting-title">Автопрокрутка</div>
+                            <div class="setting-desc">Автоматически прокручивать к новым сообщениям</div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="autoScroll" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="setting-title">Ограничение истории</div>
+                            <div class="setting-desc">Максимальное количество сохранённых сообщений</div>
+                        </div>
+                        <select id="historyLimit">
+                            <option value="50">50 сообщений</option>
+                            <option value="100" selected>100 сообщений</option>
+                            <option value="200">200 сообщений</option>
+                            <option value="500">500 сообщений</option>
+                            <option value="0">Без ограничений</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="settings-actions">
+                    <button class="btn-save" onclick="saveSettings()">
+                        <i class="fas fa-save"></i> Сохранить настройки
+                    </button>
+                    <button class="btn-reset" onclick="resetSettings()">
+                        <i class="fas fa-undo"></i> Сбросить настройки
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Внешний вид -->
+            <div id="appearance-tab" class="settings-tab-content">
+                <h3><i class="fas fa-palette"></i> Внешний вид</h3>
+                
+                <div class="settings-group">
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="setting-title">Тема оформления</div>
+                            <div class="setting-desc">Выберите цветовую тему приложения</div>
+                        </div>
+                        <div class="theme-selector">
+                            <div class="theme-option active" data-theme="light" onclick="selectTheme('light')">
+                                <div class="theme-preview light-theme"></div>
+                                <div class="theme-name">Светлая</div>
+                            </div>
+                            <div class="theme-option" data-theme="dark" onclick="selectTheme('dark')">
+                                <div class="theme-preview dark-theme"></div>
+                                <div class="theme-name">Тёмная</div>
+                            </div>
+                            <div class="theme-option" data-theme="blue" onclick="selectTheme('blue')">
+                                <div class="theme-preview blue-theme"></div>
+                                <div class="theme-name">Синяя</div>
+                            </div>
+                            <div class="theme-option" data-theme="purple" onclick="selectTheme('purple')">
+                                <div class="theme-preview purple-theme"></div>
+                                <div class="theme-name">Фиолетовая</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="setting-title">Размер шрифта</div>
+                            <div class="setting-desc">Размер текста в интерфейсе</div>
+                        </div>
+                        <select id="fontSize">
+                            <option value="small">Маленький</option>
+                            <option value="normal" selected>Обычный</option>
+                            <option value="large">Большой</option>
+                            <option value="xlarge">Очень большой</option>
+                        </select>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="setting-title">Анимации</div>
+                            <div class="setting-desc">Включить анимации и переходы</div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="animations" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="setting-title">Компактный режим</div>
+                            <div class="setting-desc">Уменьшить отступы и размеры элементов</div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="compactMode">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+                
+                <div class="preview-box">
+                    <h4><i class="fas fa-eye"></i> Предпросмотр темы</h4>
+                    <div class="theme-preview-box" id="themePreview">
+                        <div class="preview-header">Заголовок сообщения</div>
+                        <div class="preview-content">
+                            <div class="preview-icon">ℹ️</div>
+                            <div class="preview-text">Пример текста сообщения в выбранной теме</div>
+                        </div>
+                        <div class="preview-buttons">
+                            <button class="preview-button">OK</button>
+                            <button class="preview-button">Отмена</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Уведомления -->
+            <div id="notifications-tab" class="settings-tab-content">
+                <h3><i class="fas fa-bell"></i> Настройки уведомлений</h3>
+                
+                <div class="settings-group">
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="setting-title">Показывать уведомления</div>
+                            <div class="setting-desc">Показывать всплывающие уведомления</div>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="showNotifications" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="setting-title">Позиция уведомлений</div>
+                            <div class="setting-desc">Где показывать всплывающие уведомления</div>
+                        </div>
+                        <select id="notificationPosition">
+                            <option value="top-right">Справа сверху</option>
+                            <option value="top-left" selected>Слева сверху</option>
+                            <option value="bottom-right">Справа снизу</option>
+                            <option value="bottom-left">Слева снизу</option>
+                        </select>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="setting-title">Длительность показа</div>
+                            <div class="setting-desc">Сколько секунд показывать уведомление</div>
+                        </div>
+                        <input type="range" id="notificationDuration" min="1" max="10" value="3">
+                        <span id="durationValue">3 секунды</span>
+                    </div>
+                    
+                    <div class="setting-item">
+                        <div class="setting-info">
+                            <div class="setting-title">Типы уведомлений</div>
+                            <div class="setting-desc">Какие уведомления показывать</div>
+                        </div>
+                        <div class="checkbox-group">
+                            <label>
+                                <input type="checkbox" id="notifySuccess" checked>
+                                <span>✅ Успешные операции</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" id="notifyError" checked>
+                                <span>❌ Ошибки</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" id="notifyInfo" checked>
+                                <span>ℹ️ Информационные</span>
+                            </label>
+                            <label>
+                                <input type="checkbox" id="notifyWarning">
+                                <span>⚠️ Предупреждения</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="test-notification">
+                    <h4><i class="fas fa-vial"></i> Тест уведомлений</h4>
+                    <p>Проверьте как будут выглядеть уведомления:</p>
+                    <div class="test-buttons">
+                        <button class="btn-test-notify" onclick="testNotification('success')">
+                            ✅ Тест успеха
+                        </button>
+                        <button class="btn-test-notify" onclick="testNotification('error')">
+                            ❌ Тест ошибки
+                        </button>
+                        <button class="btn-test-notify" onclick="testNotification('info')">
+                            ℹ️ Тест информации
+                        </button>
+                        <button class="btn-test-notify" onclick="testNotification('warning')">
+                            ⚠️ Тест предупреждения
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Аккаунт -->
+            <div id="account-tab" class="settings-tab-content">
+                <h3><i class="fas fa-user"></i> Настройки аккаунта</h3>
+                
+                <div class="user-profile">
+                    <div class="profile-avatar">
+                        <div class="avatar-large" id="settingsAvatar">👤</div>
+                        <button class="btn-change-avatar" onclick="changeAvatar()">
+                            <i class="fas fa-camera"></i> Сменить аватар
+                        </button>
+                    </div>
+                    
+                    <div class="profile-info">
+                        <div class="profile-field">
+                            <label>Имя пользователя:</label>
+                            <input type="text" id="username" value="Гость" placeholder="Введите имя">
+                        </div>
+                        
+                        <div class="profile-field">
+                            <label>Роль:</label>
+                            <div class="role-select">
+                                <select id="userRole">
+                                    <option value="user">Пользователь</option>
+                                    <option value="admin">Администратор</option>
+                                    <option value="developer">Разработчик</option>
+                                </select>
+                                <span class="role-badge" id="currentRole">Пользователь</span>
+                            </div>
+                        </div>
+                        
+                        <div class="profile-field">
+                            <label>Статистика:</label>
+                            <div class="stats-box">
+                                <div class="stat">
+                                    <div class="stat-value" id="messagesCount">0</div>
+                                    <div class="stat-label">Сообщений создано</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value" id="templatesCount">0</div>
+                                    <div class="stat-label">Шаблонов сохранено</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-value" id="historyCount">0</div>
+                                    <div class="stat-label">В истории</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="account-actions">
+                    <h4><i class="fas fa-shield-alt"></i> Безопасность</h4>
+                    <div class="security-buttons">
+                        <button class="btn-security" onclick="exportData()">
+                            <i class="fas fa-download"></i> Экспорт данных
+                        </button>
+                        <button class="btn-security" onclick="importData()">
+                            <i class="fas fa-upload"></i> Импорт данных
+                        </button>
+                        <button class="btn-security" onclick="clearData()">
+                            <i class="fas fa-trash"></i> Очистить данные
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- О программе -->
+            <div id="about-tab" class="settings-tab-content">
+                <h3><i class="fas fa-info-circle"></i> О программе</h3>
+                
+                <div class="about-content">
+                    <div class="about-logo">
+                        <div class="logo-large">💬</div>
+                        <div class="logo-text">
+                            <h2>VBS Message Simulator</h2>
+                            <div class="version">Версия 2.0.0</div>
+                        </div>
+                    </div>
+                    
+                    <div class="about-description">
+                        <p>Интерактивный симулятор VBS сообщений для обучения и тестирования.</p>
+                        <p>Создавайте, тестируйте и делитесь VBS-сообщениями прямо в браузере.</p>
+                    </div>
+                    
+                    <div class="features-list">
+                        <h4><i class="fas fa-star"></i> Основные возможности:</h4>
+                        <ul>
+                            <li>✅ Визуальный конструктор VBS сообщений</li>
+                            <li>✅ Эмуляция Windows MessageBox</li>
+                            <li>✅ Библиотека готовых шаблонов</li>
+                            <li>✅ История созданных сообщений</li>
+                            <li>✅ Интерактивное обучение VBS</li>
+                            <li>✅ Настраиваемый интерфейс</li>
+                            <li>✅ Работает полностью в браузере</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="technical-info">
+                        <h4><i class="fas fa-code"></i> Техническая информация:</h4>
+                        <table class="tech-table">
+                            <tr>
+                                <td>Тип приложения:</td>
+                                <td>Веб-приложение (PWA)</td>
+                            </tr>
+                            <tr>
+                                <td>Технологии:</td>
+                                <td>HTML5, CSS3, JavaScript</td>
+                            </tr>
+                            <tr>
+                                <td>Хранение данных:</td>
+                                <td>LocalStorage браузера</td>
+                            </tr>
+                            <tr>
+                                <td>Размер приложения:</td>
+                                <td>~150 KB</td>
+                            </tr>
+                            <tr>
+                                <td>Поддержка браузеров:</td>
+                                <td>Chrome, Firefox, Safari, Edge</td>
+                            </tr>
+                        </table>
+                    </div>
+                    
+                    <div class="developer-info">
+                        <h4><i class="fas fa-user-tie"></i> Разработчик:</h4>
+                        <p>Создано с ❤️ для обучения и экспериментов с VBS скриптами.</p>
+                        <p>Все сообщения работают только в браузере и не запускают настоящие VBS скрипты.</p>
+                    </div>
+                    
+                    <div class="actions-about">
+                        <button class="btn-about" onclick="checkForUpdates()">
+                            <i class="fas fa-sync"></i> Проверить обновления
+                        </button>
+                        <button class="btn-about" onclick="showChangelog()">
+                            <i class="fas fa-history"></i> История изменений
+                        </button>
+                        <button class="btn-about" onclick="reportBug()">
+                            <i class="fas fa-bug"></i> Сообщить об ошибке
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
         
         <!-- Футер -->
         <footer class="footer">
@@ -1516,3 +2268,4 @@ End If`;
     </script>
 </body>
 </html>
+
